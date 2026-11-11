@@ -164,7 +164,15 @@ async function loadAll() {
       fetch(API + "/api/records?limit=500"),
       fetch(API + "/api/stats"),
     ]);
+    
+    // --- ADD THESE 3 LINES TO FIX THE CRASH ---
+    if (!recsRes.ok) throw new Error("API failed. Did you add MONGODB_URI in Vercel?");
+    if (!statsRes.ok) throw new Error("Stats API failed.");
+    // ------------------------------------------
+
     allRecords = await recsRes.json();
+    if (!Array.isArray(allRecords)) allRecords = []; // Safety check
+
     const stats = await statsRes.json();
 
     document.getElementById("sTotal").textContent   = stats.total_records ?? 0;
