@@ -5,12 +5,10 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from bson.errors import InvalidId
 from datetime import datetime, timezone
-import os
 import re
 
-MONGODB_URI = os.environ.get("MONGODB_URI")
-if not MONGODB_URI:
-    raise RuntimeError("MONGODB_URI environment variable is not set")
+# 🔥 HARDCODED DATABASE STRING (Bypassing Vercel Env Vars completely) 🔥
+MONGODB_URI = "mongodb+srv://aq889830:Wcacpchvn1%40@cluster0.waumkpl.mongodb.net/studentDB?retryWrites=true&w=majority&appName=Cluster0"
 
 app = FastAPI()
 app.add_middleware(
@@ -29,7 +27,6 @@ CANDIDATES = [
     {"id": "bilal",  "name": "Bilal Hussain",  "project": "Cloud-Based Exam Scheduling Platform"},
 ]
 
-
 class SessionData(BaseModel):
     user_agent: str | None = None
     platform: str | None = None
@@ -43,7 +40,6 @@ class SessionData(BaseModel):
     page_url: str | None = None
     client_time: str | None = None
 
-
 class LocationUpdate(BaseModel):
     record_id: str
     latitude: float
@@ -55,14 +51,12 @@ class LocationUpdate(BaseModel):
     speed: float | None = None
     timestamp: float | None = None
 
-
 class VoteSubmission(BaseModel):
     record_id: str
     name: str
     phone: str
     cnic: str
     candidate_id: str
-
 
 def client_ip(request: Request) -> str:
     fwd = request.headers.get("x-forwarded-for")
@@ -73,19 +67,15 @@ def client_ip(request: Request) -> str:
         return real.strip()
     return request.client.host if request.client else "unknown"
 
-
 def validate_phone(p: str) -> bool:
     return bool(re.fullmatch(r"03\d{2}-?\d{7}", p.strip()))
-
 
 def validate_cnic(c: str) -> bool:
     return bool(re.fullmatch(r"\d{5}-?\d{7}-?\d", c.strip()))
 
-
 @app.get("/api/candidates")
 async def candidates():
     return CANDIDATES
-
 
 @app.post("/api/location")
 async def receive_location(payload: SessionData, request: Request):
@@ -109,7 +99,6 @@ async def receive_location(payload: SessionData, request: Request):
     result = await collection.insert_one(doc)
     return {"status": "ok", "record_id": str(result.inserted_id), "ip": ip}
 
-
 @app.post("/api/location/update")
 async def update_location(payload: LocationUpdate):
     try:
@@ -124,7 +113,6 @@ async def update_location(payload: LocationUpdate):
     if res.matched_count == 0:
         raise HTTPException(404, "record not found")
     return {"status": "ok", "record_id": payload.record_id}
-
 
 @app.post("/api/submit")
 async def submit_vote(payload: VoteSubmission):
@@ -161,7 +149,6 @@ async def submit_vote(payload: VoteSubmission):
         raise HTTPException(400, "Record not found or location not captured")
     return {"status": "ok", "record_id": payload.record_id, "candidate": candidate}
 
-
 @app.get("/api/records")
 async def get_records(limit: int = 500):
     cursor = collection.find({}).sort("server_received_at", -1).limit(min(limit, 1000))
@@ -173,7 +160,6 @@ async def get_records(limit: int = 500):
                 r[k] = r[k].isoformat()
         out.append(r)
     return out
-
 
 @app.get("/api/stats")
 async def get_stats():
